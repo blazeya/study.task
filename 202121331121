@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#define MAX_LENGTH 1000
+#define MAX_WORDS 100
+
+// 将文本拆分为单词
+int tokenizeText(char *text, char *words[]) {
+    int count = 0;
+    char *token = strtok(text, " \n\t");
+
+    while (token != NULL && count < MAX_WORDS) {
+        words[count++] = token;
+        token = strtok(NULL, " \n\t");
+    }
+
+    return count;
+}
+
+// 计算余弦相似度
+float calculateCos(char *orig, char *orig_add) {
+    char *words1[MAX_WORDS];
+    char *words2[MAX_WORDS];
+    int count1, count2;
+
+    count1 = tokenizeText(orig, words1);
+    count2 = tokenizeText(orig_add, words2);
+
+    int wordCount1[MAX_WORDS] = {0};
+    int wordCount2[MAX_WORDS] = {0};
+
+    // 统计每个单词在文本1中出现的次数
+    for (int i = 0; i < count1; i++) {
+        for (int j = 0; j < count1; j++) {
+            if (strcmp(words1[i], words1[j]) == 0) {
+                wordCount1[i]++;
+            }
+        }
+    }
+
+    // 统计每个单词在文本2中出现的次数
+    for (int i = 0; i < count2; i++) {
+        for (int j = 0; j < count2; j++) {
+            if (strcmp(words2[i], words2[j]) == 0) {
+                wordCount2[i]++;
+            }
+        }
+    }
+
+    float dotProduct = 0;
+    float sumSquares1 = 0;
+    float sumSquares2 = 0;
+
+    // 计算点积和平方和
+    for (int i = 0; i < count1; i++) {
+        dotProduct += wordCount1[i] * wordCount2[i];
+        sumSquares1 += wordCount1[i] * wordCount1[i];
+    }
+
+    for (int i = 0; i < count2; i++) {
+        sumSquares2 += wordCount2[i] * wordCount2[i];
+    }
+
+    float similarity = (float) dotProduct / (sqrt((float) sumSquares1) * sqrt((float) sumSquares2));
+
+    return similarity;
+}
+
+int main() {
+    char orig[MAX_LENGTH];
+    char orig_add[MAX_LENGTH];
+
+    FILE *file1 = fopen("orig.txt", "r");
+    FILE *file2 = fopen("orig_add.txt", "r");
+
+    if (file1 == NULL || file2 == NULL) {
+        printf("无法打开文件\n");
+        return 1;
+    }
+
+    fgets(orig, MAX_LENGTH, file1);
+    fgets(orig_add, MAX_LENGTH, file2);
+
+    fclose(file1);
+    fclose(file2);
+
+    float similarity = calculateCos(orig, orig_add);
+
+    printf("文本的相似度为：%.2f\n", similarity);
+
+    return 0;
+}
